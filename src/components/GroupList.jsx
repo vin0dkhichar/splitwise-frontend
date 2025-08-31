@@ -112,34 +112,6 @@ export default function GroupList() {
                                     </button>
                                 </>
                             ) : (
-                                // <>
-                                //     <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">
-                                //         {group.name}
-                                //     </h3>
-                                //     <p className="text-gray-600 dark:text-gray-400 mb-3">
-                                //         {group.description || "No description"}
-                                //     </p>
-                                //     <div className="flex gap-2">
-                                //         <button
-                                //             className="bg-yellow-500 text-white px-3 py-1 rounded"
-                                //             onClick={() => handleEditClick(group)}
-                                //         >
-                                //             Edit
-                                //         </button>
-                                //         <button
-                                //             className="bg-red-600 text-white px-3 py-1 rounded"
-                                //             onClick={() => handleDelete(group.id)}
-                                //         >
-                                //             Delete
-                                //         </button>
-                                //         <Link
-                                //             to={`/groups/${group.id}`}
-                                //             className="bg-blue-600 text-white px-3 py-1 rounded"
-                                //         >
-                                //             View
-                                //         </Link>
-                                //     </div>
-                                // </>
                                 <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg hover:shadow-xl transition">
                                     <div className="mb-4">
                                         <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 truncate">
@@ -151,6 +123,12 @@ export default function GroupList() {
                                     </div>
 
                                     <div className="flex flex-wrap gap-2">
+                                        <Link
+                                            to={`/groups/${group.id}`}
+                                            className="bg-blue-600 hover:bg-blue-700 transition text-white px-4 py-1 rounded-md shadow-sm"
+                                        >
+                                            View
+                                        </Link>
                                         <button
                                             className="bg-yellow-500 hover:bg-yellow-600 transition text-white px-4 py-1 rounded-md shadow-sm"
                                             onClick={() => handleEditClick(group)}
@@ -163,12 +141,6 @@ export default function GroupList() {
                                         >
                                             Delete
                                         </button>
-                                        <Link
-                                            to={`/groups/${group.id}`}
-                                            className="bg-blue-600 hover:bg-blue-700 transition text-white px-4 py-1 rounded-md shadow-sm"
-                                        >
-                                            View
-                                        </Link>
                                     </div>
                                 </div>
                             )}

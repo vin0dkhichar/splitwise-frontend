@@ -54,8 +54,9 @@ export default function ExpensesList({ expenses, members, onCreateExpense, onEdi
                                 </div>
                             </div>
 
-                            {/* Edit & Delete buttons */}
                             <div className="flex gap-2">
+                                <button onClick={() => onEditExpense(exp.expense)} className="px-4 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-md">Edit</button>
+
                                 <button
                                     onClick={() => onDeleteExpense(exp.expense.id)}
                                     className="px-4 py-1 bg-red-600 hover:bg-red-700 text-white rounded-md shadow-sm transition-colors"

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
-export default function CreateExpenseModal({ members, allUsers, onClose, onCreateExpense }) {
+export default function CreateExpenseModal({ members, allUsers, onClose, onCreateExpense, onSubmit, expenseData }) {
     const [expenseForm, setExpenseForm] = useState({
         description: "",
         amount: "",
@@ -14,6 +14,33 @@ export default function CreateExpenseModal({ members, allUsers, onClose, onCreat
     const getUserDetails = (userId) => {
         return allUsers.find(user => user.id === userId) || { username: `User ${userId}`, email: "Unknown" };
     };
+
+    useEffect(() => {
+        if (expenseData) {
+            const shares = expenseData.shares || [];
+            setExpenseForm({
+                description: expenseData.description || "",
+                amount: expenseData.amount || "",
+                paid_by: expenseData.paid_by || "",
+                expense_type: expenseData.expense_type || "equal",
+                participant_ids: shares.map(s => s.user_id),
+                splits: shares.reduce((acc, s) => {
+                    if (expenseData.expense_type === "exact") acc[s.user_id] = s.share_amount;
+                    if (expenseData.expense_type === "percentage") acc[s.user_id] = s.percentage;
+                    return acc;
+                }, {})
+            });
+        } else {
+            setExpenseForm({
+                description: "",
+                amount: "",
+                paid_by: "",
+                expense_type: "equal",
+                participant_ids: [],
+                splits: {}
+            });
+        }
+    }, [expenseData]);
 
     const handleParticipantToggle = (userId) => {
         setExpenseForm(prev => {
@@ -50,7 +77,7 @@ export default function CreateExpenseModal({ members, allUsers, onClose, onCreat
 
         if (expenseForm.expense_type === "exact") {
             const total = Object.values(expenseForm.splits).reduce((acc, val) => acc + val, 0);
-            if (total !== parseFloat(expenseForm.amount)) {
+            if (Math.abs(total - parseFloat(expenseForm.amount)) > 0.01) {
                 alert("Exact amounts do not sum up to total expense amount");
                 return;
             }
@@ -58,7 +85,7 @@ export default function CreateExpenseModal({ members, allUsers, onClose, onCreat
 
         if (expenseForm.expense_type === "percentage") {
             const totalPercent = Object.values(expenseForm.splits).reduce((acc, val) => acc + val, 0);
-            if (totalPercent !== 100) {
+            if (Math.abs(totalPercent - 100) > 0.01) {
                 alert("Percentages must sum up to 100%");
                 return;
             }
@@ -88,28 +115,36 @@ export default function CreateExpenseModal({ members, allUsers, onClose, onCreat
                 }));
             }
 
-            await onCreateExpense(payload);
-            setExpenseForm({
-                description: "",
-                amount: "",
-                paid_by: "",
-                expense_type: "equal",
-                participant_ids: [],
-                splits: {}
-            });
+            if (onSubmit) {
+                await onSubmit(payload);
+            } else {
+                await onCreateExpense(payload);
+            }
+
+            if (!expenseData) {
+                setExpenseForm({
+                    description: "",
+                    amount: "",
+                    paid_by: "",
+                    expense_type: "equal",
+                    participant_ids: [],
+                    splits: {}
+                });
+            }
         } catch (error) {
-            alert(`Failed to create expense: ${error.message}`);
+            alert(`Failed to ${expenseData ? 'update' : 'create'} expense: ${error.message}`);
         } finally {
             setIsLoading(false);
         }
     };
 
-
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white dark:bg-gray-800 p-6 rounded-lg w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold dark:text-white">Create Expense</h3>
+                    <h3 className="text-lg font-semibold dark:text-white">
+                        {expenseData ? "Update Expense" : "Create Expense"}
+                    </h3>
                     <button
                         onClick={onClose}
                         className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
@@ -119,7 +154,6 @@ export default function CreateExpenseModal({ members, allUsers, onClose, onCreat
                 </div>
 
                 <div className="space-y-4">
-                    {/* Description */}
                     <div>
                         <label className="block text-sm font-medium mb-2 dark:text-white">Description *</label>
                         <input
@@ -132,7 +166,6 @@ export default function CreateExpenseModal({ members, allUsers, onClose, onCreat
                         />
                     </div>
 
-                    {/* Amount */}
                     <div>
                         <label className="block text-sm font-medium mb-2 dark:text-white">Amount (₹) *</label>
                         <input
@@ -146,7 +179,6 @@ export default function CreateExpenseModal({ members, allUsers, onClose, onCreat
                         />
                     </div>
 
-                    {/* Paid By */}
                     <div>
                         <label className="block text-sm font-medium mb-2 dark:text-white">Paid by *</label>
                         <select
@@ -167,7 +199,6 @@ export default function CreateExpenseModal({ members, allUsers, onClose, onCreat
                         </select>
                     </div>
 
-                    {/* Split Type */}
                     <div>
                         <label className="block text-sm font-medium mb-2 dark:text-white">Split Type</label>
                         <select
@@ -187,46 +218,43 @@ export default function CreateExpenseModal({ members, allUsers, onClose, onCreat
                         </select>
                     </div>
 
-                    {/* Participants and splits */}
-                    {(expenseForm.expense_type === "equal" || expenseForm.expense_type === "exact" || expenseForm.expense_type === "percentage") && (
-                        <div>
-                            <label className="block text-sm font-medium mb-2 dark:text-white">Select Participants *</label>
-                            <div className="space-y-2 max-h-40 overflow-y-auto scrollbar-hide border dark:border-gray-600 rounded-lg p-3">
-                                {members.map(memberData => {
-                                    const userDetails = getUserDetails(memberData.user_id);
-                                    const isSelected = expenseForm.participant_ids.includes(memberData.user_id);
+                    <div>
+                        <label className="block text-sm font-medium mb-2 dark:text-white">Select Participants *</label>
+                        <div className="space-y-2 max-h-40 overflow-y-auto scrollbar-hide border dark:border-gray-600 rounded-lg p-3">
+                            {members.map(memberData => {
+                                const userDetails = getUserDetails(memberData.user_id);
+                                const isSelected = expenseForm.participant_ids.includes(memberData.user_id);
 
-                                    return (
-                                        <div key={memberData.user_id} className="flex items-center justify-between">
-                                            <label className="flex items-center">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={isSelected}
-                                                    onChange={() => handleParticipantToggle(memberData.user_id)}
-                                                    className="mr-3"
-                                                    disabled={isLoading}
-                                                />
-                                                <span className="dark:text-white">{userDetails.username}</span>
-                                            </label>
+                                return (
+                                    <div key={memberData.user_id} className="flex items-center justify-between">
+                                        <label className="flex items-center">
+                                            <input
+                                                type="checkbox"
+                                                checked={isSelected}
+                                                onChange={() => handleParticipantToggle(memberData.user_id)}
+                                                className="mr-3"
+                                                disabled={isLoading}
+                                            />
+                                            <span className="dark:text-white">{userDetails.username}</span>
+                                        </label>
 
-                                            {(expenseForm.expense_type !== "equal" && isSelected) && (
-                                                <input
-                                                    type="number"
-                                                    value={expenseForm.splits[memberData.user_id] || ""}
-                                                    onChange={e => handleSplitChange(memberData.user_id, e.target.value)}
-                                                    className="w-24 p-1 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                                    placeholder={expenseForm.expense_type === "exact" ? "₹" : "%"}
-                                                    disabled={isLoading}
-                                                />
-                                            )}
-                                        </div>
-                                    );
-                                })}
-                            </div>
+                                        {(expenseForm.expense_type !== "equal" && isSelected) && (
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                value={expenseForm.splits[memberData.user_id] || ""}
+                                                onChange={e => handleSplitChange(memberData.user_id, e.target.value)}
+                                                className="w-24 p-1 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                                placeholder={expenseForm.expense_type === "exact" ? "₹" : "%"}
+                                                disabled={isLoading}
+                                            />
+                                        )}
+                                    </div>
+                                );
+                            })}
                         </div>
-                    )}
+                    </div>
 
-                    {/* Buttons */}
                     <div className="flex gap-3 pt-4">
                         <button
                             onClick={onClose}
@@ -240,7 +268,7 @@ export default function CreateExpenseModal({ members, allUsers, onClose, onCreat
                             disabled={isLoading}
                             className="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
                         >
-                            {isLoading ? "Creating..." : "Create Expense"}
+                            {isLoading ? "Saving..." : expenseData ? "Update" : "Create"}
                         </button>
                     </div>
                 </div>

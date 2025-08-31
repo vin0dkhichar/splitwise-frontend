@@ -17,6 +17,7 @@ export default function GroupDetail() {
     const [loading, setLoading] = useState(true);
     const [showAddMember, setShowAddMember] = useState(false);
     const [showCreateExpense, setShowCreateExpense] = useState(false);
+    const [editingExpense, setEditingExpense] = useState(null);
 
     const API_BASE = "http://localhost:8000";
 
@@ -121,7 +122,6 @@ export default function GroupDetail() {
         }
     };
 
-
     const handleRemoveMember = async (userId) => {
         try {
             const response = await fetch(`${API_BASE}/groups/${id}/members/${userId}`, {
@@ -151,7 +151,7 @@ export default function GroupDetail() {
                 group_id: parseInt(id)
             };
 
-            console.log(payload)
+            console.log("Creating expense:", payload);
             const response = await fetch(`${API_BASE}/expenses/create/${expenseData.expense_type}`, {
                 method: "POST",
                 headers: {
@@ -175,27 +175,86 @@ export default function GroupDetail() {
         }
     };
 
+    const handleEditExpense = (expenseItem) => {
+        const fullExpenseData = expenses.find(e => e.expense.id === expenseItem.id);
+
+        const expenseForEdit = {
+            id: expenseItem.id,
+            description: expenseItem.description,
+            amount: expenseItem.amount,
+            paid_by: expenseItem.paid_by,
+            expense_type: expenseItem.expense_type,
+            shares: fullExpenseData?.shares || []
+        };
+
+        setEditingExpense(expenseForEdit);
+        setShowCreateExpense(true);
+    };
+
+    const handleUpdateExpense = async (payload) => {
+        if (!editingExpense) return;
+
+        try {
+            const finalPayload = {
+                ...payload,
+                group_id: parseInt(id),
+            };
+
+            console.log("Updating expense with payload:", finalPayload);
+
+            const response = await fetch(`${API_BASE}/expenses/${editingExpense.id}/update/${finalPayload.expense_type}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify(finalPayload),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error("Server error:", errorData);
+                throw new Error(errorData.detail || `Server error: ${response.status}`);
+            }
+
+            await loadExpenses();
+            setShowCreateExpense(false);
+            setEditingExpense(null);
+        } catch (error) {
+            console.error("Failed to update expense:", error);
+            throw error;
+        }
+    };
+
     const handleDeleteExpense = async (expenseId) => {
         if (!window.confirm("Are you sure you want to delete this expense?")) return;
 
         try {
-            const res = await fetch(`http://localhost:8000/expenses/${expenseId}`, {
+            const response = await fetch(`${API_BASE}/expenses/${expenseId}`, {
                 method: "DELETE",
                 headers: { Authorization: `Bearer ${token}` },
             });
-            if (!res.ok) throw new Error("Failed to delete expense");
 
-            // Remove it from state
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.detail || "Failed to delete expense");
+            }
+
             setExpenses(prev => prev.filter(e => e.expense.id !== expenseId));
-        } catch (err) {
-            console.error(err);
+        } catch (error) {
+            console.error("Failed to delete expense:", error);
+            alert(`Failed to delete expense: ${error.message}`);
         }
+    };
+
+    const handleCloseModal = () => {
+        setShowCreateExpense(false);
+        setEditingExpense(null);
     };
 
     const availableUsers = (allUsers || []).filter(user =>
         !(members || []).some(member => member.user_id === user.id)
     );
-
 
     if (loading) {
         return (
@@ -226,10 +285,10 @@ export default function GroupDetail() {
 
                 <ExpensesList
                     expenses={expenses}
-                    members={members}
-                    allUsers={allUsers}
+                    members={allUsers}
                     onCreateExpense={() => setShowCreateExpense(true)}
                     onDeleteExpense={handleDeleteExpense}
+                    onEditExpense={handleEditExpense}
                 />
 
                 {showAddMember && (
@@ -244,8 +303,10 @@ export default function GroupDetail() {
                     <CreateExpenseModal
                         members={members}
                         allUsers={allUsers}
-                        onClose={() => setShowCreateExpense(false)}
+                        onClose={handleCloseModal}
                         onCreateExpense={handleCreateExpense}
+                        onSubmit={editingExpense ? handleUpdateExpense : null}
+                        expenseData={editingExpense}
                     />
                 )}
             </div>
