@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+
+.scrollbar-hide {
+  -ms-overflow-style: none; 
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+html, body, #root {
+    overflow-x: hidden;
+    width: 100%;
+}

@@ -1,0 +1,254 @@
+import { useEffect, useState, useContext } from "react";
+import { useParams } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
+import GroupHeader from "./GroupHeader";
+import MembersList from "./MembersList";
+import ExpensesList from "./ExpensesList";
+import AddMemberModal from "./AddMemberModal";
+import CreateExpenseModal from "./CreateExpenseModal";
+
+export default function GroupDetail() {
+    const { id } = useParams();
+    const { token } = useContext(AuthContext);
+    const [expenses, setExpenses] = useState([]);
+    const [group, setGroup] = useState(null);
+    const [members, setMembers] = useState([]);
+    const [allUsers, setAllUsers] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [showAddMember, setShowAddMember] = useState(false);
+    const [showCreateExpense, setShowCreateExpense] = useState(false);
+
+    const API_BASE = "http://localhost:8000";
+
+    useEffect(() => {
+        if (id && token) {
+            loadGroupData();
+        }
+    }, [id, token]);
+
+    const loadGroupData = async () => {
+        try {
+            setLoading(true);
+            await Promise.all([
+                loadGroup(),
+                loadExpenses(),
+                loadMembers(),
+                loadAllUsers()
+            ]);
+        } catch (error) {
+            console.error("Failed to load group data:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const loadGroup = async () => {
+        try {
+            const response = await fetch(`${API_BASE}/groups/${id}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setGroup(data);
+            }
+        } catch (error) {
+            console.error("Failed to load group:", error);
+        }
+    };
+
+    const loadExpenses = async () => {
+        try {
+            const response = await fetch(`${API_BASE}/expenses/group/${id}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setExpenses(data);
+            }
+        } catch (error) {
+            console.error("Failed to load expenses:", error);
+        }
+    };
+
+    const loadMembers = async () => {
+        try {
+            const response = await fetch(`${API_BASE}/groups/${id}/members`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setMembers(data);
+            }
+        } catch (error) {
+            console.error("Failed to load members:", error);
+        }
+    };
+
+    const loadAllUsers = async () => {
+        try {
+            const response = await fetch(`${API_BASE}/users/`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setAllUsers(data);
+            }
+        } catch (error) {
+            console.error("Failed to load users:", error);
+        }
+    };
+
+    const handleAddMember = async (userId) => {
+        try {
+            const response = await fetch(`${API_BASE}/groups/${id}/members?user_id=${userId}`, {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (response.ok) {
+                await loadMembers();
+                setShowAddMember(false);
+                return true;
+            } else {
+                const error = await response.json();
+                throw new Error(error.detail || "Failed to add member");
+            }
+        } catch (error) {
+            console.error("Failed to add member:", error);
+            throw error;
+        }
+    };
+
+
+    const handleRemoveMember = async (userId) => {
+        try {
+            const response = await fetch(`${API_BASE}/groups/${id}/members/${userId}`, {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            if (response.ok) {
+                await loadMembers();
+                return true;
+            } else {
+                const error = await response.json();
+                throw new Error(error.detail || "Failed to remove member");
+            }
+        } catch (error) {
+            console.error("Failed to remove member:", error);
+            throw error;
+        }
+    };
+
+    const handleCreateExpense = async (expenseData) => {
+        try {
+            const payload = {
+                ...expenseData,
+                amount: parseFloat(expenseData.amount),
+                paid_by: parseInt(expenseData.paid_by),
+                group_id: parseInt(id)
+            };
+
+            console.log(payload)
+            const response = await fetch(`${API_BASE}/expenses/create/${expenseData.expense_type}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify(payload),
+            });
+
+            if (response.ok) {
+                await loadExpenses();
+                setShowCreateExpense(false);
+                return true;
+            } else {
+                const error = await response.json();
+                throw new Error(error.detail || "Failed to create expense");
+            }
+        } catch (error) {
+            console.error("Failed to create expense:", error);
+            throw error;
+        }
+    };
+
+    const handleDeleteExpense = async (expenseId) => {
+        if (!window.confirm("Are you sure you want to delete this expense?")) return;
+
+        try {
+            const res = await fetch(`http://localhost:8000/expenses/${expenseId}`, {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (!res.ok) throw new Error("Failed to delete expense");
+
+            // Remove it from state
+            setExpenses(prev => prev.filter(e => e.expense.id !== expenseId));
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const availableUsers = (allUsers || []).filter(user =>
+        !(members || []).some(member => member.user_id === user.id)
+    );
+
+
+    if (loading) {
+        return (
+            <div className="p-6">
+                <div className="animate-pulse space-y-4">
+                    <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+            <div className="p-6 max-w-6xl mx-auto">
+                <GroupHeader
+                    group={group}
+                    groupId={id}
+                    onAddMember={() => setShowAddMember(true)}
+                    onCreateExpense={() => setShowCreateExpense(true)}
+                />
+
+                <MembersList
+                    members={members}
+                    allUsers={allUsers}
+                    onRemoveMember={handleRemoveMember}
+                />
+
+                <ExpensesList
+                    expenses={expenses}
+                    members={members}
+                    allUsers={allUsers}
+                    onCreateExpense={() => setShowCreateExpense(true)}
+                    onDeleteExpense={handleDeleteExpense}
+                />
+
+                {showAddMember && (
+                    <AddMemberModal
+                        availableUsers={availableUsers}
+                        onClose={() => setShowAddMember(false)}
+                        onAddMember={handleAddMember}
+                    />
+                )}
+
+                {showCreateExpense && (
+                    <CreateExpenseModal
+                        members={members}
+                        allUsers={allUsers}
+                        onClose={() => setShowCreateExpense(false)}
+                        onCreateExpense={handleCreateExpense}
+                    />
+                )}
+            </div>
+        </div>
+    );
+}
