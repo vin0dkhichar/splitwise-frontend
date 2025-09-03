@@ -138,7 +138,7 @@ export default function UserSettlements() {
                                             >
                                                 {g.status === "settled"
                                                     ? "Settled"
-                                                    : `${g.status === "owed" ? "+" : "-"}$${Math.abs(
+                                                    : `${g.status === "owed" ? "+" : "-"}₹${Math.abs(
                                                         g.balance
                                                     ).toFixed(2)}`}
                                             </span>
@@ -154,7 +154,7 @@ export default function UserSettlements() {
                                                         <span className="text-gray-800 dark:text-gray-200">
                                                             You pay{" "}
                                                             <span className="font-semibold text-green-600 dark:text-green-400">
-                                                                ${s.amount}
+                                                                ₹{s.amount}
                                                             </span>{" "}
                                                             to {s.to_username}
                                                         </span>

@@ -27,9 +27,9 @@ export default function GroupSettlements({ settlements, onMarkPaid }) {
                                 }
                             >
                                 {b.amount > 0
-                                    ? `+ $${b.amount}`
+                                    ? `+ ₹${b.amount}`
                                     : b.amount < 0
-                                        ? `- $${Math.abs(b.amount)}`
+                                        ? `- ₹${Math.abs(b.amount)}`
                                         : "Settled"}
                             </span>
                         </li>
@@ -48,7 +48,7 @@ export default function GroupSettlements({ settlements, onMarkPaid }) {
                                 <span className="text-gray-700 dark:text-gray-200">
                                     {s.from_username} pays{" "}
                                     <span className="font-semibold text-green-600 dark:text-green-400">
-                                        ${s.amount}
+                                        ₹{s.amount}
                                     </span>{" "}
                                     to {s.to_username}
                                 </span>
