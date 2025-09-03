@@ -1,6 +1,7 @@
 import { useEffect, useState, useContext } from "react";
 import { Link } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
+import { API_BASE } from "../config";
 
 export default function GroupList() {
     const { token } = useContext(AuthContext);
@@ -10,7 +11,7 @@ export default function GroupList() {
 
     useEffect(() => {
         if (token) {
-            fetch("http://localhost:8000/groups/", {
+            fetch(`${API_BASE}/groups/`, {
                 headers: { Authorization: `Bearer ${token}` },
             })
                 .then((res) => res.json())
@@ -26,7 +27,7 @@ export default function GroupList() {
 
     const handleUpdate = async (groupId) => {
         try {
-            const res = await fetch(`http://localhost:8000/groups/${groupId}`, {
+            const res = await fetch(`${API_BASE}/groups/${groupId}`, {
                 method: "PUT",
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -48,7 +49,7 @@ export default function GroupList() {
 
     const handleDelete = async (groupId) => {
         try {
-            const res = await fetch(`http://localhost:8000/groups/${groupId}`, {
+            const res = await fetch(`${API_BASE}/groups/${groupId}`, {
                 method: "DELETE",
                 headers: {
                     Authorization: `Bearer ${token}`,

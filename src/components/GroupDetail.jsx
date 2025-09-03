@@ -7,6 +7,7 @@ import ExpensesList from "./ExpensesList";
 import AddMemberModal from "./AddMemberModal";
 import CreateExpenseModal from "./CreateExpenseModal";
 import GroupSettlements from "./GroupSettlements";
+import { API_BASE } from "../config";
 
 export default function GroupDetail() {
     const { id } = useParams();
@@ -21,8 +22,6 @@ export default function GroupDetail() {
     const [editingExpense, setEditingExpense] = useState(null);
     const [settlements, setSettlements] = useState(null);
     const [showSettlements, setShowSettlements] = useState(false);
-
-    const API_BASE = "http://localhost:8000";
 
     useEffect(() => {
         if (id && token) {

@@ -1,4 +1,5 @@
 import { createContext, useState, useEffect } from "react";
+import { API_BASE } from "../config";
 
 export const AuthContext = createContext();
 
@@ -9,7 +10,7 @@ export function AuthProvider({ children }) {
 
     useEffect(() => {
         if (token) {
-            fetch("http://localhost:8000/auth/me", {
+            fetch(`${API_BASE}/auth/me`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -38,7 +39,7 @@ export function AuthProvider({ children }) {
         formData.append("username", email);
         formData.append("password", password);
 
-        const res = await fetch("http://localhost:8000/auth/login", {
+        const res = await fetch(`${API_BASE}/auth/login`, {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: formData,
@@ -50,7 +51,7 @@ export function AuthProvider({ children }) {
         setToken(data.access_token);
         localStorage.setItem("token", data.access_token);
 
-        const meRes = await fetch("http://localhost:8000/auth/me", {
+        const meRes = await fetch(`${API_BASE}/auth/me`, {
             headers: { Authorization: `Bearer ${data.access_token}` },
         });
         const me = await meRes.json();
