@@ -12,7 +12,7 @@ export default function Navbar() {
     return (
         <nav className="bg-gray-800 text-white px-6 py-4 flex justify-between items-center shadow-md flex-no-wrap fixed top-0 z-10 w-full">
             <div className="flex items-center gap-6">
-                <h1 className="text-xl font-bold">Expense Tracker</h1>
+                <h1 className="text-xl font-bold">Splitwise</h1>
                 <div className="flex gap-4 text-sm">
                     <NavLink to="/" className={linkClasses} end>
                         Home

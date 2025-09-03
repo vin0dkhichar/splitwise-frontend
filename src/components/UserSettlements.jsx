@@ -1,6 +1,7 @@
 import { useEffect, useState, useContext } from "react";
 import { useParams } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
+import { API_BASE } from "../config";
 
 export default function UserSettlements() {
     const { id } = useParams();
@@ -8,8 +9,6 @@ export default function UserSettlements() {
     const [settlements, setSettlements] = useState(null);
     const [groupSuggestions, setGroupSuggestions] = useState({});
     const [loading, setLoading] = useState(true);
-
-    const API_BASE = "http://localhost:8000";
 
     useEffect(() => {
         if (id && token) {

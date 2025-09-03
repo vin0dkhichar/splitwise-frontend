@@ -1,6 +1,7 @@
 import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
+import { API_BASE } from "../config";
 
 export default function GroupCreate() {
     const { token, user } = useContext(AuthContext);
@@ -13,7 +14,7 @@ export default function GroupCreate() {
         e.preventDefault();
         setError("");
 
-        const res = await fetch("http://localhost:8000/groups", {
+        const res = await fetch(`${API_BASE}/groups`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

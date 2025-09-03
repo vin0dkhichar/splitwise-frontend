@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { API_BASE } from "../config";
 
 export default function RegisterForm({ onSwitch }) {
     const [username, setUsername] = useState("");
@@ -12,7 +13,7 @@ export default function RegisterForm({ onSwitch }) {
         setError("");
         setSuccess("");
 
-        const res = await fetch("http://localhost:8000/users/", {
+        const res = await fetch(`${API_BASE}/users/`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ username, email, password }),
