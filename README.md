@@ -8,8 +8,8 @@ The app connects to a **FastAPI backend** and provides an interface for managing
 ## Installation
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/expense-tracker-frontend.git
-cd expense-tracker-frontend
+git clone https://github.com/vin0dkhichar/splitwise-frontend.git
+cd splitwise-frontend
 
 # Install dependencies
 npm install
