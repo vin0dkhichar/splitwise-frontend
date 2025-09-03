@@ -125,18 +125,18 @@ export default function GroupList() {
                                     <div className="flex flex-wrap gap-2">
                                         <Link
                                             to={`/groups/${group.id}`}
-                                            className="bg-blue-600 hover:bg-blue-700 transition text-white px-4 py-1 rounded-md shadow-sm"
+                                            className="bg-blue-800 hover:bg-blue-700 transition text-white px-4 py-1 rounded-md shadow-sm"
                                         >
                                             View
                                         </Link>
                                         <button
-                                            className="bg-yellow-500 hover:bg-yellow-600 transition text-white px-4 py-1 rounded-md shadow-sm"
+                                            className="bg-yellow-700 hover:bg-yellow-600 transition text-white px-4 py-1 rounded-md shadow-sm"
                                             onClick={() => handleEditClick(group)}
                                         >
                                             Edit
                                         </button>
                                         <button
-                                            className="bg-red-600 hover:bg-red-700 transition text-white px-4 py-1 rounded-md shadow-sm"
+                                            className="bg-red-700 hover:bg-red-700 transition text-white px-4 py-1 rounded-md shadow-sm"
                                             onClick={() => handleDelete(group.id)}
                                         >
                                             Delete

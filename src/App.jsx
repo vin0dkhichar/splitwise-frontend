@@ -4,7 +4,6 @@ import { AuthContext } from "./context/AuthContext";
 
 import AuthPage from "./pages/AuthPage";
 import Home from "./pages/Home";
-import SettlementsPage from "./pages/SettlementsPage";
 import GroupCreate from "./components/GroupCreate";
 import GroupDetail from "./components/GroupDetail";
 import Layout from "./pages/Layout";
@@ -28,7 +27,6 @@ export default function App() {
         <Routes>
             <Route element={<Layout />}>
                 <Route path="/" element={<Home />} />
-                <Route path="/settlements" element={<SettlementsPage />} />
                 <Route path="/groups/create" element={<GroupCreate />} />
                 <Route path="/groups/:id" element={<GroupDetail />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
