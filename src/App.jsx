@@ -7,7 +7,7 @@ import Home from "./pages/Home";
 import GroupCreate from "./components/GroupCreate";
 import GroupDetail from "./components/GroupDetail";
 import Layout from "./pages/Layout";
-
+import UserSettlements from "./components/UserSettlements";
 
 export default function App() {
     const { user, loading } = useContext(AuthContext);
@@ -19,6 +19,7 @@ export default function App() {
             </div>
         );
     }
+
     if (!user) {
         return <AuthPage />;
     }
@@ -29,6 +30,7 @@ export default function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/groups/create" element={<GroupCreate />} />
                 <Route path="/groups/:id" element={<GroupDetail />} />
+                <Route path="/settlements/user/:id" element={<UserSettlements />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
         </Routes>

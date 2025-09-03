@@ -12,16 +12,21 @@ export default function Navbar() {
     return (
         <nav className="bg-gray-800 text-white px-6 py-4 flex justify-between items-center shadow-md flex-no-wrap fixed top-0 z-10 w-full">
             <div className="flex items-center gap-6">
-                <h1 className="text-xl font-bold">💰 Expense Tracker</h1>
+                <h1 className="text-xl font-bold">Expense Tracker</h1>
                 <div className="flex gap-4 text-sm">
                     <NavLink to="/" className={linkClasses} end>
                         Home
                     </NavLink>
+                    {user && (
+                        <NavLink to={`/settlements/user/${user.id}`} className={linkClasses}>
+                            My Settlements
+                        </NavLink>
+                    )}
                 </div>
             </div>
 
             <div className="flex items-center gap-4">
-                {user && <span className="hidden sm:block">Hello, {user.username}</span>}
+                {user && <span className="hidden sm:block">{user.username}</span>}
                 <button
                     onClick={logout}
                     className="bg-red-500 px-3 py-1 rounded-lg hover:bg-red-600 text-sm"

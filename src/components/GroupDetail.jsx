@@ -6,6 +6,7 @@ import MembersList from "./MembersList";
 import ExpensesList from "./ExpensesList";
 import AddMemberModal from "./AddMemberModal";
 import CreateExpenseModal from "./CreateExpenseModal";
+import GroupSettlements from "./GroupSettlements";
 
 export default function GroupDetail() {
     const { id } = useParams();
@@ -18,6 +19,8 @@ export default function GroupDetail() {
     const [showAddMember, setShowAddMember] = useState(false);
     const [showCreateExpense, setShowCreateExpense] = useState(false);
     const [editingExpense, setEditingExpense] = useState(null);
+    const [settlements, setSettlements] = useState(null);
+    const [showSettlements, setShowSettlements] = useState(false);
 
     const API_BASE = "http://localhost:8000";
 
@@ -227,8 +230,6 @@ export default function GroupDetail() {
     };
 
     const handleDeleteExpense = async (expenseId) => {
-        if (!window.confirm("Are you sure you want to delete this expense?")) return;
-
         try {
             const response = await fetch(`${API_BASE}/expenses/${expenseId}`, {
                 method: "DELETE",
@@ -244,6 +245,58 @@ export default function GroupDetail() {
         } catch (error) {
             console.error("Failed to delete expense:", error);
             alert(`Failed to delete expense: ${error.message}`);
+        }
+    };
+
+    const handleToggleSettlements = async () => {
+        if (showSettlements) {
+            setShowSettlements(false);
+        } else {
+            await loadGroupSettlements();
+            setShowSettlements(true);
+        }
+    };
+
+    const loadGroupSettlements = async () => {
+        try {
+            const res = await fetch(`${API_BASE}/settlements/groups/${id}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setSettlements(data);
+                setShowSettlements(true);
+            }
+        } catch (err) {
+            console.error("Failed to fetch settlements:", err);
+        }
+    };
+
+    const handleMarkPaid = async (fromUserId, toUserId, amount) => {
+
+        try {
+            const res = await fetch(`${API_BASE}/settlements/groups/${id}/mark-paid`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    from_user_id: fromUserId,
+                    to_user_id: toUserId,
+                    amount,
+                }),
+            });
+
+            if (!res.ok) {
+                const errData = await res.json();
+                throw new Error(errData.detail || "Failed to mark settlement as paid");
+            }
+
+            loadGroupSettlements();
+        } catch (err) {
+            console.error("Error marking paid:", err);
+            alert(`Error: ${err.message}`);
         }
     };
 
@@ -275,7 +328,16 @@ export default function GroupDetail() {
                     groupId={id}
                     onAddMember={() => setShowAddMember(true)}
                     onCreateExpense={() => setShowCreateExpense(true)}
+                    onViewSettlements={loadGroupSettlements}
+                    onToggleSettlements={handleToggleSettlements}
                 />
+
+                {showSettlements && settlements && (
+                    <GroupSettlements
+                        settlements={settlements}
+                        onMarkPaid={handleMarkPaid}
+                    />
+                )}
 
                 <MembersList
                     members={members}
@@ -284,7 +346,7 @@ export default function GroupDetail() {
                 />
 
                 <ExpensesList
-                    expenses={expenses}
+                    expenses={[...expenses].reverse()}
                     members={allUsers}
                     onCreateExpense={() => setShowCreateExpense(true)}
                     onDeleteExpense={handleDeleteExpense}
